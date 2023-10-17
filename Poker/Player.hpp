@@ -1,6 +1,15 @@
 #pragma once
 
 namespace PokerGame {
+	enum class Actions {Call, Fold, Raise};
+
+	struct Action {
+		Action(Actions action, double bet) : action(action), bet(bet) {}
+
+		Actions action;
+		double bet;
+	};
+
 	class Player {
 	public:
 		Player() {
@@ -15,6 +24,10 @@ namespace PokerGame {
 
 		void ResetHand() {
 			Hand1, Hand2 = nullptr;
+		}
+
+		Action Act() {
+
 		}
 
 	private:
