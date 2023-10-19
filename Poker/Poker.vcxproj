@@ -132,6 +132,7 @@
   <ItemGroup>
     <ClInclude Include="Card.hpp" />
     <ClInclude Include="Player.hpp" />
+    <ClInclude Include="PokerGame.hpp" />
     <ClInclude Include="Table.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

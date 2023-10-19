@@ -21,39 +21,6 @@ namespace PokerGame {
         Suit suit;
     };
 
-    class Deck52 {
-    public:
-        Deck52(bool random = true) : Cards(full52deck) {
-            DrawCardCounter = 0;
-
-            if (random) {
-                shuffle();
-            }
-        }
-
-        void shuffle() {
-            std::random_device rd;
-            std::mt19937 rng(rd());
-            std::shuffle(Cards.begin(), Cards.end(), rng);
-        }
-
-        Card* DrawCard() {
-            DrawCardCounter++;
-            
-            return &Cards[DrawCardCounter];
-        }
-
-        void Reset() {
-            DrawCardCounter = 0;
-
-            shuffle();
-        }
-
-    private:
-        int DrawCardCounter;
-        std::array<Card, DECK_52_SIZE> Cards;
-    };
-
     const std::array<Card, DECK_52_SIZE> full52deck = {
         Card(Rank::Two, Suit::Clubs),
         Card(Rank::Two, Suit::Diamonds),
@@ -119,5 +86,38 @@ namespace PokerGame {
         Card(Rank::Ace, Suit::Diamonds),
         Card(Rank::Ace, Suit::Hearts),
         Card(Rank::Ace, Suit::Spades),
+    };
+
+    class Deck52 {
+    public:
+        Deck52(bool random = true) : Cards(full52deck) {
+            DrawCardCounter = 0;
+
+            if (random) {
+                shuffle();
+            }
+        }
+
+        void shuffle() {
+            std::random_device rd;
+            std::mt19937 rng(rd());
+            std::shuffle(Cards.begin(), Cards.end(), rng);
+        }
+
+        Card* DrawCard() {
+            DrawCardCounter++;
+            
+            return &Cards[DrawCardCounter];
+        }
+
+        void Reset() {
+            DrawCardCounter = 0;
+
+            shuffle();
+        }
+
+    private:
+        int DrawCardCounter;
+        std::array<Card, DECK_52_SIZE> Cards;
     };
 }
