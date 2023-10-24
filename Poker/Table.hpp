@@ -17,7 +17,9 @@ namespace PokerGame {
 			SmallBlind = 10;
 			BigBlind = 20;
 			BuyIn = BigBlind * 70;
-			DealearPlayerNumber = 0;
+			DealerPlayerIndex = 0;
+			CurrentRaise = 0;
+			CurrentBet = 0;
 
 			for (int i = 0; i < MAX_TABLE_CARDS; i++) {
 				TableCards[i] = nullptr;
@@ -28,53 +30,80 @@ namespace PokerGame {
 			}
 		}
 
-		void BetRound() {
-			Player* currentPlayer;
+		void HandlePlayerAction(Player* player) {
+			Action playerAction = player->Act();
 
-			for (int i = DealearPlayerNumber;;) {
-				if (Players[i] != nullptr) {
+			switch (playerAction.action) {
+			case Actions::Call:
+				if (!player->Pay(CurrentRaise)) {
+					player->InGame = false;
+					player->ResetHand();
+					std::cout << " CALL PLAYER KICKED!" << '\n';
+					break;
+				}
+
+				player->AddToCurrentBet(CurrentRaise);
+				Pot += CurrentRaise;
+				break;
+
+			case Actions::Fold:
+				player->InGame = false;
+				player->ResetHand();
+				std::cout << " FOLD PLAYER KICKED!" << '\n';
+				break;
+
+			case Actions::Raise:
+				if (!player->Pay(CurrentRaise + playerAction.bet)) {
+					player->InGame = false;
+					player->ResetHand();
+					std::cout << " RAISE PLAYER KICKED!" << '\n';
+					break;
+				}
+
+				player->AddToCurrentBet(CurrentRaise + playerAction.bet);
+				CurrentRaise += playerAction.bet;
+				Pot += CurrentRaise;
+			}
+		}
+
+		void BetRound() {
+			Player* currPlayer;
+			int i = DealerPlayerIndex;
+			int playersPassed = 0;
+
+			do {
+				currPlayer = Players[i];
+
+				if (currPlayer == nullptr) {
+					i = NextPlayerIndex(i);
 					continue;
 				}
 
-				currentPlayer = Players[i];
+				HandlePlayerAction(currPlayer);
+				playersPassed++;
 
-				Action act = currentPlayer->Act(); // put tablestate/gamestate data in Act()
+				i = NextPlayerIndex(i);
 
-				switch (act.action) {
-				case Actions::Call:
-					if (!currentPlayer->Pay(CurrentRaise)) {
-						currentPlayer->InGame = false;
-						currentPlayer->ResetHand();
-					}
+			} while (CurrentBetsEqual() && playersPassed >= 9);
 
-					currentPlayer->AddToCurrentBet(CurrentRaise);
-					break;
+			ResetCurrentBets();
+		}
 
-				case Actions::Fold:
-					currentPlayer->InGame = false;
-					currentPlayer->ResetHand();
-					break;
+		Player* NextPlayer(int current) {
+			int PlayersToGo = MAX_PLAYERS;
+			int i = NextPlayerIndex(current);
 
-				case Actions::Raise:
-					if (!currentPlayer->Pay(CurrentRaise)) {
-						currentPlayer->InGame = false;
-						currentPlayer->ResetHand();
-					}
-
-					currentPlayer->AddToCurrentBet(CurrentRaise);
-					CurrentRaise += act.bet;
-				}
-
-				if (Players[NextPlayerIndex(i)]->GetCurrentBet() == currentPlayer->GetCurrentBet()) {
-					return;
+			do {
+				if (Players[i] != nullptr) {
+					return Players[i];
 				}
 
 				i = NextPlayerIndex(i);
-			}
-
+				PlayersToGo--;
+			} while (PlayersToGo != 0);
 		}
 
-		int NextPlayerIndex(double current) {
+		int NextPlayerIndex(int current) {
 			if (current == MAX_PLAYERS - 1) {
 				return 0;
 			}
@@ -82,19 +111,65 @@ namespace PokerGame {
 			return current + 1;
 		}
 
+		bool CurrentBetsEqual() {
+			std::cout << "CurrentBetsEqual() iter; Dealer index: " << DealerPlayerIndex << " Current Raise: " << CurrentRaise << '\n';
+			double lastPlayerBet;
+			int iPlayer = 0;
+
+			for (Player* player : Players) {
+				if (player == nullptr) {
+					iPlayer = NextPlayerIndex(iPlayer);
+					continue;
+				}
+
+				lastPlayerBet = player->GetCurrentBet();
+				iPlayer = NextPlayerIndex(iPlayer);
+				break;
+			}
+
+			for (int i = 0; i < MAX_PLAYERS; i++) {
+				if (Players[iPlayer] == nullptr) {
+					iPlayer = NextPlayerIndex(iPlayer);
+					continue;
+				}
+
+				if (Players[iPlayer]->GetCurrentBet() != lastPlayerBet) {
+					return false;
+				} else {
+					iPlayer = NextPlayerIndex(iPlayer);
+				}
+			}
+
+			return true;
+		}
+
+		void ResetCurrentBets() {
+			for (Player* player : Players) {
+				if (player != nullptr) {
+					player->SetCurrentBet(0);
+				}
+			}
+		}
+
 		void Preflop() {
-			int iCurrentPlayer = DealearPlayerNumber;
-			int iPlayersToGo = MAX_PLAYERS;
+			int iCurrentPlayer = DealerPlayerIndex;
+			int iPlayersToGo = CurrentPlayersNumber;
 
 			do {
-				switch (iPlayersToGo) {
-				case MAX_PLAYERS - 1:
+				if (Players[iCurrentPlayer] == nullptr) {
+					iCurrentPlayer = NextPlayerIndex(iCurrentPlayer);
+					continue;
+				}
+
+				if (NextPlayerIndex(DealerPlayerIndex) == iCurrentPlayer) {
 					if (!Players[iCurrentPlayer]->Pay(SmallBlind)) {
 						Players[iCurrentPlayer]->InGame = false;
 						continue;
 					}
 					Pot += SmallBlind;
-				case MAX_PLAYERS - 2:
+				}
+
+				if (NextPlayerIndex(NextPlayerIndex(DealerPlayerIndex)) == iCurrentPlayer) {
 					if (!Players[iCurrentPlayer]->Pay(BigBlind)) {
 						Players[iCurrentPlayer]->InGame = false;
 						continue;
@@ -108,31 +183,8 @@ namespace PokerGame {
 				iCurrentPlayer = NextPlayerIndex(iCurrentPlayer);
 
 			} while (iPlayersToGo != 0);
-
-			// Deal two private cards to each player
-			/*for (int fromDealerCounter = DealerPlayerIndex;;) {
-				if (Players[i] == nullptr) {
-					continue;
-				}
-
-				if (fromDealerCounter == 1) {
-					if (!Players[i]->Pay(SmallBlind)) {
-						Players[i]->InGame = false;
-						continue;
-					}
-					Pot += SmallBlind;
-				} else if (fromDealerCounter == 2) {
-					if (!Players[i]->Pay(BigBlind)) {
-						Players[i]->InGame = false;
-						continue;
-					}
-					Pot += BigBlind;
-				}
-
-				Players[i]->SetHand(Deck.DrawCard(), Deck.DrawCard());
-
-				fromDealerCounter++;
-			}*/
+			
+			ResetCurrentBets();
 		}
 
 		void Flop() {
@@ -164,12 +216,23 @@ namespace PokerGame {
 			}
 		}
 
+		int FreePlayerSlotIndex() {
+			for (int i = 0; i < MAX_PLAYERS; i++) {
+				if (Players[i] == nullptr) {
+					return i;
+				}
+			}
+		}
+
 		void AddPlayer(Player* player) {
 			if (CurrentPlayersNumber < MAX_PLAYERS) {
-				Players[CurrentPlayersNumber] = player;
+				Players[FreePlayerSlotIndex()] = player;
 
 				CurrentPlayersNumber++;
+				return;
 			}
+
+			throw std::runtime_error("No space for a new player!");
 		}
 
 		void Reset() {
@@ -194,27 +257,23 @@ namespace PokerGame {
 			River();
 			LastRound();
 
-			if (DealearPlayerNumber == MAX_PLAYERS - 1) {
-				DealearPlayerNumber = 0;
-			}
-			else {
-				DealearPlayerNumber++;
-			}
+			DealerPlayerIndex = NextPlayerIndex(DealerPlayerIndex);
 		}
 
 		// TODO: Delete
 		void PrintDebugInfo() {
 			for (int i = 0; i < MAX_PLAYERS; i++) {
 				if (Players[i] != nullptr) {
-					std::cout << Players[i]->GetBalance() << '\n';
+					std::cout << "Player " << i << " " << "Balance " << Players[i]->GetBalance() << '\n';
 				}
 			}
+
+			std::cout << "Pot: " << Pot << '\n';
 		}
 
 	private:
 		Deck52 Deck;
 		int CurrentPlayersNumber;
-		int DealearPlayerNumber;
 		int DealerPlayerIndex;
 		double SmallBlind;
 		double BigBlind;
@@ -222,7 +281,6 @@ namespace PokerGame {
 		double Pot;
 		double CurrentRaise;
 		double CurrentBet;
-		bool TradesStated;
 		std::array<Card*, MAX_TABLE_CARDS> TableCards;
 		std::array<Player*, MAX_PLAYERS> Players;
 	};

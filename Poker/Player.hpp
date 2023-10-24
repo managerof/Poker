@@ -14,7 +14,7 @@ namespace PokerGame {
 	public:
 		bool InGame;
 
-		Player() : Balance(0), CurrentBet(0), InGame(false) {
+		Player() : Balance(1000), CurrentBet(0), InGame(false) {
 			Hand1 = nullptr;
 			Hand2 = nullptr;
 		}
@@ -29,7 +29,8 @@ namespace PokerGame {
 		}
 
 		Action Act() {
-			return Action(Actions::Call, 0);
+			// TODO: neural network action prediction
+			return Action(Actions::Raise, 1);
 		}
 
 		double GetBalance() {
