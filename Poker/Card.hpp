@@ -10,6 +10,24 @@ namespace PokerGame {
     enum class Rank { Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King, Ace };
     enum class Suit { Hearts, Diamonds, Clubs, Spades };
 
+    Rank MaxRank(Rank a, Rank b) { return a > b ? a : b; }
+
+    Rank MaxRankThree(Rank a, Rank b, Rank c) {
+        return std::max({ a, b, c });
+    }
+
+    Rank NextRank(Rank rank) {
+        // Implement the logic to find the next rank
+        // For example, assuming Ace is the highest rank and Two is the lowest:
+        if (rank == Rank::Ace) {
+            return Rank::Two;
+        }
+        else {
+            // Increment the rank by one to get the next rank
+            return static_cast<Rank>(static_cast<int>(rank) + 1);
+        }
+    }
+
     class Card {
     public:
         Card(Rank rank, Suit suit) : rank(rank), suit(suit) {}
@@ -114,6 +132,10 @@ namespace PokerGame {
             DrawCardCounter = 0;
 
             shuffle();
+        }
+
+        Card* operator[](int index) {
+            return &Cards[index];
         }
 
     private:

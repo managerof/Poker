@@ -19,22 +19,9 @@ int main() {
 
 	table.PrintDebugInfo(); // DEBUG
 
-	table.Preflop();
+	table.Play();
 
 	table.PrintDebugInfo(); // DEBUG
-
-	table.BetRound();
-
-	table.PrintDebugInfo(); // DEBUG
-
-	table.Flop();
-
-	table.PrintDebugInfo(); // DEBUG
-
-	table.BetRound();
-
-	table.PrintDebugInfo(); // DEBUG
-
 
 	return 0;
 }

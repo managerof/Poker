@@ -10,31 +10,44 @@ namespace PokerGame {
 		double bet;
 	};
 
+	struct Hand {
+		Hand(Card* a, Card* b) : First(a), Second(b) {};
+
+		void Reset() {
+			First = nullptr;
+			Second = nullptr;
+		}
+
+		Card* First;
+		Card* Second;
+	};
+
 	class Player {
 	public:
 		bool InGame;
 
-		Player() : Balance(1000), CurrentBet(0), InGame(false) {
-			Hand1 = nullptr;
-			Hand2 = nullptr;
+		Player() : Balance(1000), CurrentBet(0), InGame(false), Hand(nullptr, nullptr) {
 		}
 
 		void SetHand(Card* hand1, Card* hand2) {
-			Hand1 = hand1;
-			Hand2 = hand2;
+			this->Hand.First = hand1;
 		}
 
 		void ResetHand() {
-			Hand1, Hand2 = nullptr;
+			this->Hand.Reset();
 		}
 
 		Action Act() {
 			// TODO: neural network action prediction
-			return Action(Actions::Raise, 1);
+			return Action(Actions::Call, 0);
 		}
 
 		double GetBalance() {
 			return Balance;
+		}
+
+		void AddToBalance(double amount) {
+			Balance += amount;
 		}
 		
 		bool Pay(double ammount) {
@@ -58,10 +71,13 @@ namespace PokerGame {
 			return CurrentBet;
 		}
 
+		Hand GetHand() {
+			return this->Hand;
+		}
+
 	private:
 		double Balance;
 		double CurrentBet;
-		Card* Hand1;
-		Card* Hand2;
+		Hand Hand;
 	};
 }
