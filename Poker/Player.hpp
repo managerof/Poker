@@ -24,13 +24,14 @@ namespace PokerGame {
 
 	class Player {
 	public:
-		bool InGame;
+		bool InGame = false;
 
-		Player() : Balance(1000), CurrentBet(0), InGame(false), Hand(nullptr, nullptr) {
+		Player() : Hand(nullptr, nullptr) {
 		}
 
-		void SetHand(Card* hand1, Card* hand2) {
-			this->Hand.First = hand1;
+		void SetHand(Card* card1, Card* card2) {
+			this->Hand.First = card1;
+			this->Hand.Second = card2;
 		}
 
 		void ResetHand() {
@@ -39,7 +40,7 @@ namespace PokerGame {
 
 		Action Act() {
 			// TODO: neural network action prediction
-			return Action(Actions::Call, 0);
+			return Action(Actions::Raise, 100);
 		}
 
 		double GetBalance() {
@@ -76,8 +77,8 @@ namespace PokerGame {
 		}
 
 	private:
-		double Balance;
-		double CurrentBet;
+		double Balance = 1000;
+		double CurrentBet = 0;
 		Hand Hand;
 	};
 }

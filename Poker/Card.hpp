@@ -4,11 +4,32 @@
 #include <algorithm>
 
 namespace PokerGame {
+    const int MAX_TABLE_CARDS = 5;
+    const int MAX_HAND_CARDS = 2;
+    const int MAX_PLAYERS = 10;
+
     const int DECK_52_SIZE = 52;
     const int DECK_36_SIZE = 36;
 
     enum class Rank { Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King, Ace };
     enum class Suit { Hearts, Diamonds, Clubs, Spades };
+
+    class Card {
+    public:
+        Card(Rank rank, Suit suit) : _rank(rank), _suit(suit) {
+
+        }
+
+        Rank getRank() const { return _rank; }
+        const Rank* getRankPointer() const {
+            return &_rank;
+        }
+        Suit getSuit() const { return _suit; }
+
+    private:
+        Rank _rank;
+        Suit _suit;
+    };
 
     Rank MaxRank(Rank a, Rank b) { return a > b ? a : b; }
 
@@ -16,28 +37,24 @@ namespace PokerGame {
         return std::max({ a, b, c });
     }
 
+    Rank MaxRank(std::array<Card*, MAX_HAND_CARDS + MAX_TABLE_CARDS> cards) {
+        std::array<Rank, MAX_HAND_CARDS + MAX_TABLE_CARDS> ranks;
+        
+        for (int i = 0; i < MAX_HAND_CARDS + MAX_TABLE_CARDS; i++) {
+            ranks[i] = cards[i]->getRank();
+        }
+
+        return MaxRank(MaxRankThree(ranks[0], ranks[1], ranks[2]), MaxRank(MaxRankThree(ranks[3], ranks[4], ranks[5]), ranks[6]));
+    }
+
     Rank NextRank(Rank rank) {
-        // Implement the logic to find the next rank
-        // For example, assuming Ace is the highest rank and Two is the lowest:
         if (rank == Rank::Ace) {
             return Rank::Two;
         }
         else {
-            // Increment the rank by one to get the next rank
             return static_cast<Rank>(static_cast<int>(rank) + 1);
         }
     }
-
-    class Card {
-    public:
-        Card(Rank rank, Suit suit) : rank(rank), suit(suit) {}
-        Rank getRank() const { return rank; }
-        Suit getSuit() const { return suit; }
-
-    private:
-        Rank rank;
-        Suit suit;
-    };
 
     const std::array<Card, DECK_52_SIZE> full52deck = {
         Card(Rank::Two, Suit::Clubs),
